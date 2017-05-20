@@ -1,0 +1,18 @@
+Resumo do Simplex
+Etapa 1: Determine uma solução básica inicial viável
+Etapa 2: Selecione uma variável para entrar na base usando a condição de otimalidade (coeficiente
+mais negativo de Z). Pare se não houver nenhuma variável para entrar na base: a última
+solução obtida é ótima. Caso contrário siga para a etapa 3.
+Etapa 3: Selecione uma variável para sair da base usando a condição de viabilidade (menor razão
+não negativa).
+Etapa 4: Determine a nova solução básica usando as operações de Gauss-Jordan. Vá para a etapa 2.
+Operações de linha por Gauss-Jordan
+1. Linha Pivô
+a) Substitua a variável que sai da base pela variável que entra na base
+b) Nova Linha Pivô = Linha Pivô Atual / Número Pivô
+2. Todas as outras linhas, incluindo Z
+Nova Linha = Linha Atual – Coef. da Coluna Pivô * Nova Linha Pivô
+
+numero variaveis, nro equacoes, equações, função obj, sinal var
+
+http://www.pythonforbeginners.com/basics/string-manipulation-in-python
