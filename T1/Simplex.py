@@ -4,10 +4,8 @@ Implementacao do algoritmo Simplex para resolucao de problemas de
 programação linear na forma canonica
 @autores: Caroline Santos e Douglas Antonio Martins Barbino
 """
-
-import math
-
-ppl = open('ppl_2.txt', 'r')
+#Le o arquivo com o formato gerado pelo site http://www.cos.ufrj.br/splint/
+ppl = open('ppl_3.txt', 'r')
 #le a primeira linha que contem o numero de variaveis na ppl
 linha = ppl.readline()
 #Separa apenas o numero da linha
@@ -41,15 +39,24 @@ objetivo = linha[9:].replace(']', '')
 #Separa o coeficiente de cada variavel
 objetivo = objetivo.split(',')
 #print(objetivo)
+#Fecha o arquivo, pois ele nao sera mais necessario
+ppl.close()
 #Criacao da matriz ja preenchida por 0 onde serah resolvido o PPL. Composto por:
 #- Indice x: Numero de restricoes + Funcao objetivo
-#- Indice y: Numero de variaveis + numero de resticoes (pois cada uma cria uma variavel a mais) + Constante
-matrizResolucao = [[0 for y in range(numeroRestricoes+numeroVariaveis+1)] for x in range(numeroRestricoes+1)] 
+#- Indice y: Numero de variaveis + numero de resticoes (pois cada uma cria uma variavel a mais)
+matrizResolucao = [[0 for y in range(numeroRestricoes+numeroVariaveis)] for x in range(numeroRestricoes+1)] 
+#Criacao do vetor que armazena os resultados de cada equacao ou restricao da matriz,
+#sendo que ela nao ficara na matriz para facilitar nos calculos
+constante = [0 for x in range(numeroRestricoes+1)] 
+#Criacao do vetor que armazenara qual variavel tal linha armazena o valor
+variaveis = ["" for x in range(numeroRestricoes+1)]
+variaveis[0] = "z"
+#print(variaveis[1])
+#print(constante[4])
 #print(matrizResolucao[3][6])
 #Insere as constantes da funcao objetivo na matriz já invertidas
 for i in range(numeroVariaveis):
     matrizResolucao[0][i] = int(objetivo[i]) * -1
-#print(matrizResolucao[0][2])
 #Insere as constantes das restricoes na matriz
 for i in range(1, numeroRestricoes+1):
     for j in range(numeroVariaveis):
@@ -58,9 +65,63 @@ for i in range(1, numeroRestricoes+1):
             matrizResolucao[i][j] = int(restricoes[i-1][j])
         else:
             #Caso atingiu, eh necessario tambem coletar a constante da restricao
-            matrizResolucao[i][j], matrizResolucao[i][numeroVariaveis+numeroRestricoes] = int(restricoes[i-1][j][0]), int(restricoes[i-1][j][1])
-#print(matrizResolucao[0][1])
-#print(matrizResolucao[1][7])
-#print(matrizResolucao[2][0])
-#print(matrizResolucao[4][7])
-ppl.close()
+            matrizResolucao[i][j], constante[i] = int(restricoes[i-1][j][0]), int(restricoes[i-1][j][1])
+            #Tambem marca a variavel que aquela linha armazena o valor
+            variaveis[i] = "x" + str(numeroVariaveis+i)
+    #Atribui o valor 1 na coluna que corresponde a base daquela linha
+    matrizResolucao[i][numeroVariaveis+i-1] = 1
+#Loop onde o simplex eh resolvendo, sendo ele mantido enquanto na linha da funcao objetivo 
+#possuir um valor negativo
+while(min(matrizResolucao[0]) < 0):
+    #Limpa a variavel razao
+    razao = float('inf')
+    #Armazena o indice de onde localiza-se o menor valor da funcao objetivo.
+    #Note que caso haja varios numeros empatados como menor valor, sempre o indice do primeiro sera pego
+    coluna = matrizResolucao[0].index(min(matrizResolucao[0]))
+    #print(coluna)
+    #Busca a menor razao nao negativa
+    for i in range(1, numeroRestricoes+1):
+        try:
+            razaoParcial = constante[i]/matrizResolucao[i][coluna]
+        #Tratamento de erro caso ocorra uma divisao por zero
+        except ZeroDivisionError:
+            razaoParcial = 0
+        if ((razao > razaoParcial) and (razaoParcial > 0)):
+            #Salva a linha onde a menor razao foi encontrada
+            linha = i
+            razao = razaoParcial
+    #Nova linha pivo
+    numeroPivo = matrizResolucao[linha][coluna]
+    for i in range(numeroRestricoes+numeroVariaveis):
+        matrizResolucao[linha][i] = matrizResolucao[linha][i] / numeroPivo
+    constante[linha] = constante[linha] / numeroPivo
+    #Atualiza o resto da matriz
+    for i in range(numeroRestricoes+1):  
+        #Verifica se a linha que sera atualizada eh a linha pivo
+        if (i == linha):
+            #Caso seja, apenas atualiza a variavel que ela armazena o valor
+            variaveis[i] = "x" + str(coluna+1)
+        else:
+            #Caso nao seja, atualiza os valores da matriz
+            coeficienteLinha = matrizResolucao[i][coluna] * -1
+            for j in range(numeroRestricoes+numeroVariaveis):
+                matrizResolucao[i][j] = matrizResolucao[i][j] + (coeficienteLinha * matrizResolucao[linha][j])
+            constante[i] = constante[i] + (coeficienteLinha * constante[linha])
+    #print(linha)
+#Cria a string que sera impressa para o usuario contendo o resultado
+stringFinal = "Solução ótima:"
+for i in range(numeroRestricoes+numeroVariaveis):
+    #Limpa a variavel de controle
+    ehZero = True
+    #Verifica se a variavel avaliada se encontra no vetor das variaveis
+    for j in range(1, numeroRestricoes+1):
+        if (("x" + str(i+1)) == variaveis[j]):
+            #Caso ela seja encontrada, atualiza a string com seu valor e desativa a variavel de controle
+            stringFinal = stringFinal + "\nx" + str(i+1) + " = " + str(constante[j])
+            ehZero = False
+    #Se ela nao foi encontrada, quer dizer que seu valor eh zero, entao atualiza a string com isso
+    if (ehZero):
+        stringFinal = stringFinal + "\nx" + str(i+1) + " = 0"
+#Ultima atualizacao da string, inserindo o valor maximo da funcao objetivo
+stringFinal = stringFinal + "\nz = " + str(constante[0])
+print(stringFinal)
