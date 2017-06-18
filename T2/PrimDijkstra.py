@@ -81,7 +81,7 @@ def Dijkstra(G, raiz):
         #Ou seja, calcula o custo da raiz até u
         for node in G.neighbors(u):
             #Se o nó vizinho não está em visitados e se o custoAtual dele é maior que o custo do nó atual + o peso dele
-            if not node in nosVisitados and G.node[node]['custoAtual'] > G.get_edge_data(u,node)['weight'] + G.node[u]['custoAtual']:
+            if ((not node in nosVisitados) and (G.node[node]['custoAtual'] > G.get_edge_data(u,node)['weight'] + G.node[u]['custoAtual'])):
                 #então significa que o melhor caminho da raiz até o no foi encontrado
                 #remove ele de Q
                 Q.remove((G.node[node]['custoAtual'], node))
