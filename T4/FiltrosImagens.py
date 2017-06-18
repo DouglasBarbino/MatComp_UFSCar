@@ -14,43 +14,54 @@ def FiltroMediana(imagem):
 def FiltroWiener(imagem, dimensaoJanela, sigmaN):
     #Converte a imagem para float
     imagemFloat = skimage.util.img_as_float(imagem)
-    #Normalizacao da imagem caso ela nao tenha nenhum pixel (255, 255, 255)
+    #Normalizacao da imagem caso ela nao tenha nenhum pixel branco ([255, 255, 255], 1.0 em float)
     if (imagemFloat.max() != 1.0):
         valorNormalizacao = imagemFloat.max()
+        #Percorre a altura da imagem
         for i in range(0, imagem.shape[0]):
+            #Percorre a largura da imagem
             for j in range(0, imagem.shape[1]):
                 imagemFloat[i][j] = imagemFloat[i][j] / valorNormalizacao
     #Cria uma matriz vazia que sera a saida
     imagemTratada = np.zeros(shape=(imagem.shape[0],imagem.shape[1]))
     #Armazena o numero de pixels que a janela possui
     pixels = dimensaoJanela * dimensaoJanela
-    #Momento de percorrer a imagem para trata-la
+    #Momento de percorrer a imagem para trata-la (loop externo = altura; loop interno = largura)
     for i in range(0, imagem.shape[0]):
         for j in range(0, imagem.shape[1]):
-            #Limpa a variavel onde fica a media na janela ao redor do pixel
-            media = 0
-            #Coleta a media
+            #Limpa algumas variaveis
+            miF = 0 #media
+            sigmaF = 0 #variancia na janela
+            sigmaS = 0 #variancia local
             for k in range (pixels):
                 #- Primeira coordenada lida com a altura, segunda com a largura.
                 #- (dimensaoJanela-1)/2 porque queremos a mesma quantidade de pixels 
                 #anteriores e posteriores a janela, alem do pixel na mesma coordenada
-                media += (1/pixels) * imagemFloat[((k//dimensaoJanela)+i-((dimensaoJanela-1)/2))%imagem.shape[0]][((k%dimensaoJanela)+j-((dimensaoJanela-1)/2))%imagem.shape[1]] 
-    #print(imagemFloat)
-    #print(imagemFloat[0][0])
-    #print(imagemFloat[0][-1])
-    #Imprime a imagem
-    io.imshow(imagem)
+                miF += (1/pixels) * imagemFloat[((k//dimensaoJanela)+i-((dimensaoJanela-1)/2))%imagem.shape[0]][((k%dimensaoJanela)+j-((dimensaoJanela-1)/2))%imagem.shape[1]] 
+            for k in range (pixels):
+                sigmaF += (1/pixels) * (imagemFloat[((k//dimensaoJanela)+i-((dimensaoJanela-1)/2))%imagem.shape[0]][((k%dimensaoJanela)+j-((dimensaoJanela-1)/2))%imagem.shape[1]] - miF)**2
+            #Modifica sigmaS caso sigmaF - sigmaN sejam maiores do que 0, 
+            #caso contrario fica o valor limpo anteriormente
+            if (sigmaF - sigmaN > 0):
+                sigmaS = sigmaF - sigmaN
+            #Atribuicao do pixel tratado na nova imagem
+            imagemTratada[i][j] = miF + (sigmaS * (imagemFloat[i][j] - miF) / (sigmaS + sigmaN))
     return imagemTratada
     
 #Carrega a imagem
-imagem1 = io.imread('imagens_ruidosas\camera.png')
+imagem1 = io.imread('imagens_ruidosas\camera_gaussian.png')
 
-'''Testes'''
+'''--Testes--'''
 #Coordenadas
-print(imagem1.shape)
+#print(imagem1.shape)
 #Altura
-print(imagem1.shape[0])
+#print(imagem1.shape[0])
 #Largura
-print(imagem1.shape[1])
+#print(imagem1.shape[1])
+'''----------'''
+#Imprime a imagem
+#io.imshow(imagem)
 
 imagem1Tratada = FiltroWiener(imagem1, 5, 0.01)
+#Salvar imagem tratada
+io.imsave('imagens_ruidosas\camera_gaussian_tratada5.png', imagem1Tratada)
