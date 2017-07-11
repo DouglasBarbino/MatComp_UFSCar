@@ -1,5 +1,5 @@
 1. Algoritmo Simplex
 2. Algoritmo de Prim/Dijkstra
-4. Caminhadas aleatórias
+3. Ford Fulkerson
 7. Filtragem de ruído em imagens
 9. O algoritmo LLE
