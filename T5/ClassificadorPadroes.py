@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Implementacao do classificador Bayesiano sob hipótese Gaussiana e do
+Implementacao do classificador Bayesiano sob hipotese Gaussiana e do
 classificador KNN, calculando sua taxa de erro
 @autores: Caroline Santos e Douglas Antonio Martins Barbino
 """
@@ -56,19 +56,35 @@ def calculoMatrizCovarianciaMedia(divisaoClassesTeste, nroClassesPossiveis):
             media[i][j] = mediaAtributo
     return matrizCovariancia, media
 
-def ClassificacaoBayes(dataset, nroClasses):
-    classificacao = [0 for x in range(len(dataset))] 
-    return classificacao
-
-def ClassificadorBayesiano(dados):
+def ClassificadorBayesiano(dados, atributoClasse):
     #Divide o conjunto de dados passado como parametro
     conjTreino, conjTeste = divideDataset(dados, 0.5)
     #Classe eh o ultimo atributo, portanto passa como parametro -1
-    divisaoClassesTreino, nroClassesPossiveis = dividePorClasse(conjTreino, -1)
+    divisaoClassesTreino, nroClassesPossiveis = dividePorClasse(conjTreino, atributoClasse)
     #Realiza o calculo da matriz de covariancia e da media dos atributos por classe
     matrizCovariancia, media = calculoMatrizCovarianciaMedia(divisaoClassesTreino, nroClassesPossiveis)
+    #Inicializa um vetor onde sera armazenado as classificacoes
+    classificacao = [0 for x in range(len(conjTreino))] 
     #Classifica conforme o conjunto teste
-    classificacao = ClassificacaoBayes(conjTeste, nroClassesPossiveis)
+    for x in range(len(conjTreino)):
+        #Lima variavel de apoio
+        maiorDiscriminante = float('-inf')
+        for j in range(nroClassesPossiveis): 
+            #Calculo do discriminante, sendo:
+            #np.log sendo o ln
+            #np.transpose a transposta da matriz
+            #np.subtract a subtracao entre duas matrizes
+            #np.linalg.inv a inversa de uma matriz
+            discriminante = np.log(1/nroClassesPossiveis) - (0.5 * np.log(matrizCovariancia[j])) - (0.5 * np.transpose(np.subtract(conjTreino[x], media[j])) * np.linalg.inv(matrizCovariancia[j]) * (np.subtract(x, media[j])))
+            #Atualiza o maior discriminante, preenchendo a classe a qual ela pertence           
+            if (discriminante > maiorDiscriminante):
+                maiorDiscriminante = discriminante
+                maiorClasse = conjTreino[x][atributoClasse]
+        #Apos obter a maior classe, atualiza no vetor de classificacao 
+        classificacao[x] = maiorClasse
+    #calcula a precisão de acertos
+    precisao = getPrecisao(conjTreino, classificacao)
+    print('Precisão Classificador Bayesiano sob hipotese Gaussiana: ' + repr(precisao))
 
 #calcula a distancia euclidiana para 2 objetos de 'tamanho' atributos
 def distanciaEuclidiana(obj1, obj2, tamanho):
@@ -153,12 +169,8 @@ with open('dados_multivariados/4-diabetes/pima-indians-diabetes.data', 'rt') as 
     #converte as colunas para seus respectivos dados de acordo com o dataset
     dataset = [(int(col1),int(col2),int(col3),int(col4),int(col5),float(col6),float(col7),int(col8),int(col9)) for col1,col2,col3,col4,col5,col6,col7,col8,col9 in reader]
 #chama classificador Knn com k=11
-#ClassificadorKNN(dataset,11)
-#Carrega um dos conjuntos de dados
-#conjunto1 = open('dados_multivariados/4-diabetes/pima-indians-diabetes.data', 'r')
-#Todo o texto do arquivo eh transformado em matriz
-#dados1 = list(conjunto1)
-#conjunto1.close()
-ClassificadorBayesiano(dataset)
+ClassificadorKNN(dataset,11)
+#chama o classificador Bayesiano, passando como parametro o atributo da classe
+ClassificadorBayesiano(dataset, -1)
 #base: http://machinelearningmastery.com/naive-bayes-classifier-scratch-python/
 #Depois monto os creditos direitinho
