@@ -8,7 +8,7 @@ import random
 import math
 import operator
 import csv
-
+import numpy as np
 
 
 def divideDataset(dataset, taxaAprendizado):
@@ -23,31 +23,52 @@ def divideDataset(dataset, taxaAprendizado):
         index = random.randint(0, len(conjTreino)-1)
         #Remove a instancia escolhida do conjunto de treino e o passa pro conjunto de teste
         conjTeste.append(conjTreino.pop(index))
-    return [conjTreino, conjTeste]
+    return conjTreino, conjTeste
     
 def dividePorClasse(dataset, atributoClasse):
     #Cria um conjunto onde ficarao as classes divididas
     divisaoClasses = {}
-    #Cria um vetor para armazenar os possiveis valores de classes
-    classesPossiveis = []
+    #Variavel onde se armazena o numero de classes possiveis para controle da matriz de covariancia e da media
+    nroClassesPossiveis = 0
     for i in range(len(dataset)):
         #guarda a instancia
         instancia = dataset[i]
-        #Encontrou classe nova, cria um indice para ela e a coloca no vetor de classes possiveis
+        #Encontrou classe nova, cria um indice para ela
         if (instancia[atributoClasse] not in divisaoClasses):
             divisaoClasses[instancia[atributoClasse]] = []
-            classesPossiveis.append(instancia[atributoClasse])
+            nroClassesPossiveis += 1
         divisaoClasses[instancia[atributoClasse]].append(instancia)
-    return divisaoClasses, classesPossiveis
+    return divisaoClasses, nroClassesPossiveis
+
+def calculoMatrizCovarianciaMedia(divisaoClassesTeste, nroClassesPossiveis):
+    matrizCovariancia = []
+    #O vetor de media eh inicializado com seu tamanho certo, ou seja,
+    #possui a altura do numero de classes possiveis e a largura do numero de atributos
+    media = [[0 for y in range(len(divisaoClassesTeste[0][0]))] for x in range(nroClassesPossiveis)] 
+    for i in divisaoClassesTeste:
+        matrizCovariancia.append(np.cov(divisaoClassesTeste[i]))
+        #Percorre cada atributo
+        for j in range((len(divisaoClassesTeste[i][0]))):
+            mediaAtributo = 0
+            #Para cada instancia daquela classe, soma na media o valor daquele atributo
+            for k in range((len(divisaoClassesTeste[i]))):
+                mediaAtributo += (1/len(divisaoClassesTeste[i])) * divisaoClassesTeste[i][k][j]
+            media[i][j] = mediaAtributo
+    return matrizCovariancia, media
+
+def ClassificacaoBayes(dataset, nroClasses):
+    classificacao = [0 for x in range(len(dataset))] 
+    return classificacao
 
 def ClassificadorBayesiano(dados):
     #Divide o conjunto de dados passado como parametro
-    conjTeste, conjTreino = divideDataset(dados, 0.5)
-    #-2 pois ele conta o /n como atributo...
-    divisaoClassesTeste, classesPossiveis = dividePorClasse(conjTeste, -2)
-    print(divisaoClassesTeste)
-    print(classesPossiveis)
-    return
+    conjTreino, conjTeste = divideDataset(dados, 0.5)
+    #Classe eh o ultimo atributo, portanto passa como parametro -1
+    divisaoClassesTreino, nroClassesPossiveis = dividePorClasse(conjTreino, -1)
+    #Realiza o calculo da matriz de covariancia e da media dos atributos por classe
+    matrizCovariancia, media = calculoMatrizCovarianciaMedia(divisaoClassesTreino, nroClassesPossiveis)
+    #Classifica conforme o conjunto teste
+    classificacao = ClassificacaoBayes(conjTeste, nroClassesPossiveis)
 
 #calcula a distancia euclidiana para 2 objetos de 'tamanho' atributos
 def distanciaEuclidiana(obj1, obj2, tamanho):
@@ -132,12 +153,12 @@ with open('dados_multivariados/4-diabetes/pima-indians-diabetes.data', 'rt') as 
     #converte as colunas para seus respectivos dados de acordo com o dataset
     dataset = [(int(col1),int(col2),int(col3),int(col4),int(col5),float(col6),float(col7),int(col8),int(col9)) for col1,col2,col3,col4,col5,col6,col7,col8,col9 in reader]
 #chama classificador Knn com k=11
-ClassificadorKNN(dataset,11)
+#ClassificadorKNN(dataset,11)
 #Carrega um dos conjuntos de dados
 #conjunto1 = open('dados_multivariados/4-diabetes/pima-indians-diabetes.data', 'r')
 #Todo o texto do arquivo eh transformado em matriz
 #dados1 = list(conjunto1)
 #conjunto1.close()
-#ClassificadorBayesiano(dataset)
+ClassificadorBayesiano(dataset)
 #base: http://machinelearningmastery.com/naive-bayes-classifier-scratch-python/
 #Depois monto os creditos direitinho
