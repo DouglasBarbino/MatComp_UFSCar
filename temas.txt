@@ -1,5 +1,5 @@
 1. Algoritmo Simplex
 2. Algoritmo de Prim/Dijkstra
 3. Ford Fulkerson
-7. Filtragem de ru�do em imagens
-9. O algoritmo LLE
+4. Filtragem de ruído em imagens (Filtro Mediana e Filtro de Weiner)
+5. Classificação de Padrões (KNN e Classificador Bayesiano sob hipótese Gaussiana)
