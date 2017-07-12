@@ -1,5 +1,5 @@
 #Algoritmo de Ford Fulkerson para obter o fluxo máximo em redes
-
+"@autores: Caroline Santos e Douglas Antonio Martins Barbino"
 #realiza a busca em profundidade no grafo para encontrar todos os caminhos possiveis de 
 # S à T
 #retorna os caminhos encontrados de S à T
