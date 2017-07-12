@@ -9,37 +9,37 @@ import numpy as np
 import random as rm
 
 def Prim (GP, raizGP):
-    #Inicializacao de um grafo que vai receber o MST resultante da execucao do Prim
-    #e atribuicao de todos os nos que existem no grafo original
+    #Inicializacao do grafo que vai receber o MST resultante da execucao do Prim
     GrafoPrim = nx.Graph()
+    #Atribuicao de todos os nos que existem no grafo original sem nenhuma aresta
     GrafoPrim.add_nodes_from(GP)
-    #print(GrafoPrim.nodes())
-    #print(GrafoPrim.edges(data = True))
     for i in GP.nodes():
-        #atribui peso infinito para todos os nos, depois eh corrigido o do raiz
+        #Atribui peso infinito para todos os nos, corrigindo depois a raiz
         GP.node[i]['peso'] = float('inf')
     GP.node[raizGP]['peso'] = 0
     #Percorre os nos para saber qual possui o menor peso
     while (GP.number_of_nodes() > 0):
-        #limpa a variavel de menor peso
+        #Limpa a variavel de menor peso
         menorPeso = float('inf')
-        #verifica qual eh o vertice com menor peso, simulando a primitiva EXTRACT-MIN
+        #Verifica qual eh o vertice com menor peso, simulando a primitiva EXTRACT-MIN
         for i in GP.nodes():
+            #Atualiza a tabela de menor peso
             if GP.node[i]['peso'] <= menorPeso:
                 verticeMenorPeso = i
                 menorPeso = GP.node[i]['peso']
-        # percorre todos os vizinhos do no com o menor peso
+        #Percorre todos os vizinhos do no com o menor peso
         for i in GP.neighbors(verticeMenorPeso):
-            #Verifica se o peso da aresta eh menor que o peso armazendo ateh o momento
+            #Verifica se o peso da aresta eh menor que o peso armazendo ate o momento
             if GP.node[i]['peso'] > GP.get_edge_data(verticeMenorPeso,i)['weight']:
                 GP.node[i]['peso'] = GP.get_edge_data(verticeMenorPeso,i)['weight']
                 #Armazena o peso e o vizinho do no para que, ao final da execucao, a MST seja criada
                 GrafoPrim.node[i]['peso'] = GP.get_edge_data(verticeMenorPeso,i)['weight']
                 GrafoPrim.node[i]['vizinho'] = verticeMenorPeso
+        #Remove o vertice do menor peso
         GP.remove_node(verticeMenorPeso)
     #Atribuicao das arestas escolhidas para compor a MST no grafo que estah apenas com os nos
     for i in GrafoPrim.nodes():
-        #Raiz nao eh adicionada pois ela nao tem vizinho
+        #Raiz nao eh adicionada pois ela nao tem vizinho armazenado
         if (i != raizGP):            
             GrafoPrim.add_edge(i, GrafoPrim.node[i]['vizinho'], weight=GrafoPrim.node[i]['peso'])
     return GrafoPrim
@@ -105,8 +105,6 @@ def Dijkstra(G, raiz):
     
 #Leitura de um grafo por meio de uma lista de arestas
 GP = nx.read_edgelist('women.txt', nodetype=int, data=(('weight',float),))
-#print(GP.nodes())
-#print(GP.edges(data = True))
 
 #Define um vertice inicial aleatorio
 vertices = GP.nodes()
@@ -125,7 +123,6 @@ vertices = GD.nodes()
 #Pegando a mesma raiz usada em Prim
 raizGD = raizGP
 
-
 print("-------------DIJKSTRA-----------------")
 MSTDijkstra = Dijkstra(GD, raizGD)
 print(MSTDijkstra.nodes())
@@ -134,5 +131,3 @@ print(MSTDijkstra.edges(data=True))
 #Leitura de um grafo por meio de uma matriz de adjacencia
 MAdj = np.loadtxt('cidades.txt')
 GD = nx.from_numpy_matrix(MAdj)
-#print(GD.nodes())
-#print(GD.edges(data = True))

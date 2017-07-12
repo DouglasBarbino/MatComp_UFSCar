@@ -10,12 +10,10 @@ ppl = open('ppl_3.txt', 'r')
 linha = ppl.readline()
 #Separa apenas o numero da linha
 numeroVariaveis = int(linha[5:])
-#print(numeroVariaveis)
 #le a segunda linha que contem a quantidade de restricoes na ppl
 linha = ppl.readline()
 #Separa apenas o numero
 numeroRestricoes = int(linha[5:])
-#print(numeroRestricoes)
 #le a terceira linha que contem as restricoes da ppl
 linha = ppl.readline()
 #Separa do primeiro colchete para frente, removendo o colchete do final tambem
@@ -24,12 +22,9 @@ restricoes = linha[6:].replace(']', '')
 #note que no ultimo valor tambem se separa o resultado da resolucao, sendo que no momento
 #apenas equacoes com menor ou igual estao sendo aceitas, pois elas fazem parte da forma canonica
 restricoes = restricoes.split(';')
-#print(restricoes)
 for i in range(numeroRestricoes):
    restricoes[i] = restricoes[i].split(',')
    restricoes[i][numeroVariaveis-1] = restricoes[i][numeroVariaveis-1].split('<=')
-   #print(restricoes[i])
-#print(restricoes[0][2][1])
 #le a quarta linha que contem a funcao objetivo
 linha = ppl.readline()
 #Separa do primeiro colchete para frente, removendo o colchete do final tambem
@@ -38,7 +33,6 @@ linha = ppl.readline()
 objetivo = linha[9:].replace(']', '')
 #Separa o coeficiente de cada variavel
 objetivo = objetivo.split(',')
-#print(objetivo)
 #Fecha o arquivo, pois ele nao sera mais necessario
 ppl.close()
 #Criacao da matriz ja preenchida por 0 onde serah resolvido o PPL. Composto por:
@@ -48,13 +42,11 @@ matrizResolucao = [[0 for y in range(numeroRestricoes+numeroVariaveis)] for x in
 #Criacao do vetor que armazena os resultados de cada equacao ou restricao da matriz,
 #sendo que ela nao ficara na matriz para facilitar nos calculos
 constante = [0 for x in range(numeroRestricoes+1)] 
-#Criacao do vetor que armazenara qual variavel tal linha armazena o valor
+#Criacao do vetor relacionado com constante[], armazenando a qual variavel eh aquele valor
 variaveis = ["" for x in range(numeroRestricoes+1)]
+#O primeiro sempre eh o resultado da funcao objetivo
 variaveis[0] = "z"
-#print(variaveis[1])
-#print(constante[4])
-#print(matrizResolucao[3][6])
-#Insere as constantes da funcao objetivo na matriz já invertidas
+#Insere as constantes, ja invertidas, da funcao objetivo na matriz
 for i in range(numeroVariaveis):
     matrizResolucao[0][i] = int(objetivo[i]) * -1
 #Insere as constantes das restricoes na matriz
@@ -68,7 +60,7 @@ for i in range(1, numeroRestricoes+1):
             matrizResolucao[i][j], constante[i] = int(restricoes[i-1][j][0]), int(restricoes[i-1][j][1])
             #Tambem marca a variavel que aquela linha armazena o valor
             variaveis[i] = "x" + str(numeroVariaveis+i)
-    #Atribui o valor 1 na coluna que corresponde a base daquela linha
+    #Atribui o valor 1 na coluna que corresponde a base daquela linha (a variavel criada)
     matrizResolucao[i][numeroVariaveis+i-1] = 1
 #Loop onde o simplex eh resolvendo, sendo ele mantido enquanto na linha da funcao objetivo 
 #possuir um valor negativo
@@ -76,22 +68,22 @@ while(min(matrizResolucao[0]) < 0):
     #Limpa a variavel razao
     razao = float('inf')
     #Armazena o indice de onde localiza-se o menor valor da funcao objetivo.
-    #Note que caso haja varios numeros empatados como menor valor, sempre o indice do primeiro sera pego
+    #Note que caso haja varios numeros empatados como menor valor, sempre o primeiro indice deles sera pego
     coluna = matrizResolucao[0].index(min(matrizResolucao[0]))
-    #print(coluna)
     #Busca a menor razao nao negativa
     for i in range(1, numeroRestricoes+1):
+        #Tratamento de erro caso ocorra uma divisao por zero
         try:
             razaoParcial = constante[i]/matrizResolucao[i][coluna]
-        #Tratamento de erro caso ocorra uma divisao por zero
         except ZeroDivisionError:
             razaoParcial = 0
+        #Caso encontrou a menor razao e ela eh positiva nao nula, salva a linha onde ela estah 
         if ((razao > razaoParcial) and (razaoParcial > 0)):
-            #Salva a linha onde a menor razao foi encontrada
             linha = i
             razao = razaoParcial
     #Nova linha pivo
     numeroPivo = matrizResolucao[linha][coluna]
+    #Normaliza todos os valores daquela linha, tanto na matriz como na constante
     for i in range(numeroRestricoes+numeroVariaveis):
         matrizResolucao[linha][i] = matrizResolucao[linha][i] / numeroPivo
     constante[linha] = constante[linha] / numeroPivo
@@ -102,12 +94,11 @@ while(min(matrizResolucao[0]) < 0):
             #Caso seja, apenas atualiza a variavel que ela armazena o valor
             variaveis[i] = "x" + str(coluna+1)
         else:
-            #Caso nao seja, atualiza os valores da matriz
+            #Caso nao seja, atualiza os valores da matriz e da constante
             coeficienteLinha = matrizResolucao[i][coluna] * -1
             for j in range(numeroRestricoes+numeroVariaveis):
                 matrizResolucao[i][j] = matrizResolucao[i][j] + (coeficienteLinha * matrizResolucao[linha][j])
             constante[i] = constante[i] + (coeficienteLinha * constante[linha])
-    #print(linha)
 #Cria a string que sera impressa para o usuario contendo o resultado
 stringFinal = "Solução ótima:"
 for i in range(numeroRestricoes+numeroVariaveis):
@@ -122,6 +113,6 @@ for i in range(numeroRestricoes+numeroVariaveis):
     #Se ela nao foi encontrada, quer dizer que seu valor eh zero, entao atualiza a string com isso
     if (ehZero):
         stringFinal = stringFinal + "\nx" + str(i+1) + " = 0"
-#Ultima atualizacao da string, inserindo o valor maximo da funcao objetivo
+#Ultima atualizacao da string, inserindo o valor maximo obtido na funcao objetivo
 stringFinal = stringFinal + "\nz = " + str(constante[0])
 print(stringFinal)

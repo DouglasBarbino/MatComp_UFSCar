@@ -13,10 +13,10 @@ import operator
 import csv
 import numpy as np
 
-
 def divideDataset(dataset, taxaAprendizado):
     #Calcula o tamanho que deve ficar o conjunto de treinamento
     tamanhoConjTeste = int(len(dataset) * taxaAprendizado)
+    #Inicializa o conjunto de teste vazio
     conjTeste = []
     #No inicio todo o conjunto de dados vai para o conjunto de treino, depois 
     #que a porcentagem de instancias pedidas vao para o conjunto de teste
@@ -24,22 +24,23 @@ def divideDataset(dataset, taxaAprendizado):
     while len(conjTeste) < tamanhoConjTeste:
         #Seleciona aleatoriamente uma instancia do conjunto de treino
         index = random.randint(0, len(conjTreino)-1)
-        #Remove a instancia escolhida do conjunto de treino e o passa pro conjunto de teste
+        #Remove a instancia escolhida do conjunto de treino e a passa pro conjunto de teste
         conjTeste.append(conjTreino.pop(index))
     return conjTreino, conjTeste
     
 def dividePorClasse(dataset, atributoClasse):
     #Cria um conjunto onde ficarao as classes divididas
     divisaoClasses = {}
-    #Variavel onde se armazena o numero de classes possiveis para controle da matriz de covariancia e da media
+    #Variavel onde se armazena o numero de classes possiveis para futuro controle da matriz de covariancia e da media
     nroClassesPossiveis = 0
     for i in range(len(dataset)):
-        #guarda a instancia
+        #guarda a instancia verificada naquele momento
         instancia = dataset[i]
         #Encontrou classe nova, cria um indice para ela
         if (instancia[atributoClasse] not in divisaoClasses):
             divisaoClasses[instancia[atributoClasse]] = []
             nroClassesPossiveis += 1
+        #Adiciona na classe correspondente a instancia verififcada
         divisaoClasses[instancia[atributoClasse]].append(instancia)
     return divisaoClasses, nroClassesPossiveis
 
@@ -49,14 +50,16 @@ def calculoMatrizCovarianciaMedia(divisaoClassesTeste, nroClassesPossiveis):
     #possui a altura do numero de classes possiveis e a largura do numero de atributos (com excecao da classe)
     media = [[0 for y in range(len(divisaoClassesTeste[0][0]) - 1)] for x in range(nroClassesPossiveis)] 
     for i in divisaoClassesTeste:
-        #Necessario para que a matriz de covariancia saia com as dimensoes corretas
+        #Faz a transposta da matriz que contem as instancias da classe avaliada
+        #para que a matriz de covariancia saia com as dimensoes corretas
         divClassesTransposto = np.transpose(divisaoClassesTeste[i])
-        #Deleta a linha onde estah armazenado a classe
+        #Deleta a linha onde esta armazenada a classe
         divClassesTransposto = np.delete(divClassesTransposto, -1, 0)
         #Cria matriz de covariancia
         matrizCovariancia.append(np.cov(divClassesTransposto))
-        #Percorre cada atributo
+        #Para o calculo da media se percorre cada atributo
         for j in range(len(divisaoClassesTeste[i][0]) - 1):
+            #Limpa o valor da variavel
             mediaAtributo = 0
             #Para cada instancia soma na media o valor daquele atributo
             for k in range(len(divClassesTransposto[j])):
@@ -67,35 +70,35 @@ def calculoMatrizCovarianciaMedia(divisaoClassesTeste, nroClassesPossiveis):
 def ClassificadorBayesiano(dados, atributoClasse):
     #Divide o conjunto de dados passado como parametro
     conjTreino, conjTeste = divideDataset(dados, 0.5)
-    #Classe eh o ultimo atributo, portanto passa como parametro -1
+    #Divide o conjunto de treino segundo suas classes, passando seu atributo como parametro
     divisaoClassesTreino, nroClassesPossiveis = dividePorClasse(conjTreino, atributoClasse)
     #Realiza o calculo da matriz de covariancia e da media dos atributos por classe
     matrizCovariancia, media = calculoMatrizCovarianciaMedia(divisaoClassesTreino, nroClassesPossiveis)
     #Inicializa um vetor onde sera armazenado as classificacoes
-    classificacao = [0 for x in range(len(conjTreino))] 
-    #Classifica conforme o conjunto teste
-    for x in range(len(conjTreino)):
-        #Lima variavel de apoio
+    classificacao = [0 for x in range(len(conjTeste))] 
+    #Classifica conforme as instancias do conjunto teste
+    for x in range(len(conjTeste)):
+        #Limpa variavel de apoio
         maiorDiscriminante = float('-inf')
         for j in range(nroClassesPossiveis): 
             #Calculo do discriminante, sendo:
-            #np.log sendo o ln
-            #np.linalg.det sendo o determinante da matriz
+            #np.log o ln
+            #np.linalg.det o determinante da matriz
             #np.dot a multiplicacao de matrizes
             #np.transpose a transposta da matriz
             #np.subtract a subtracao entre duas matrizes
-            #np.delete(conjTreino[x], -1, 0) para deletar a coluna da classe
+            #np.delete(conjTeste[x], -1, 0) para deletar a coluna da classe na instancia
             #np.linalg.inv a inversa de uma matriz
-            discriminante = np.log(1/nroClassesPossiveis) - (0.5 * np.log(np.linalg.det(matrizCovariancia[j]))) - (0.5 * np.dot(np.dot(np.transpose(np.subtract(np.delete(conjTreino[x], -1, 0), media[j])), np.linalg.inv(matrizCovariancia[j])), np.subtract(np.delete(conjTreino[x], -1, 0), media[j])))
+            discriminante = np.log(1/nroClassesPossiveis) - (0.5 * np.log(np.linalg.det(matrizCovariancia[j]))) - (0.5 * np.dot(np.dot(np.transpose(np.subtract(np.delete(conjTeste[x], -1, 0), media[j])), np.linalg.inv(matrizCovariancia[j])), np.subtract(np.delete(conjTeste[x], -1, 0), media[j])))
             #Atualiza o maior discriminante, preenchendo a classe a qual ela pertence           
             if (discriminante > maiorDiscriminante):
                 maiorDiscriminante = discriminante
                 maiorClasse = j
-        #Apos obter a maior classe, atualiza no vetor de classificacao 
+        #Apos obter a maior classe, insere-a no vetor de classificacao 
         classificacao[x] = maiorClasse
-    #calcula a precisão de acertos
+    #Calcula a precisão de acertos
     precisao = getPrecisao(conjTreino, classificacao)
-    print('Precisão Classificador Bayesiano sob hipotese Gaussiana: ' + repr(precisao))
+    print('Precisão Classificador Bayesiano sob hipotese Gaussiana: ' + repr(precisao) + '%')
 
 #calcula a distancia euclidiana para 2 objetos de 'tamanho' atributos
 def distanciaEuclidiana(obj1, obj2, tamanho):
@@ -181,5 +184,5 @@ with open('dados_multivariados/4-diabetes/pima-indians-diabetes.data', 'rt') as 
     dataset = [(int(col1),int(col2),int(col3),int(col4),int(col5),float(col6),float(col7),int(col8),int(col9)) for col1,col2,col3,col4,col5,col6,col7,col8,col9 in reader]
 #chama classificador Knn com k=11
 ClassificadorKNN(dataset,11)
-#chama o classificador Bayesiano, passando como parametro o atributo da classe
+#chama o classificador Bayesiano, passando como parametro o atributo da classe, que nesse dataset eh o ultimo
 ClassificadorBayesiano(dataset, -1)
