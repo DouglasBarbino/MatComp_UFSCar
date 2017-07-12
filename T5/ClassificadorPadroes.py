@@ -53,6 +53,7 @@ def calculoMatrizCovarianciaMedia(divisaoClassesTeste, nroClassesPossiveis):
         divClassesTransposto = np.transpose(divisaoClassesTeste[i])
         #Deleta a linha onde estah armazenado a classe
         divClassesTransposto = np.delete(divClassesTransposto, -1, 0)
+        #Cria matriz de covariancia
         matrizCovariancia.append(np.cov(divClassesTransposto))
         #Percorre cada atributo
         for j in range(len(divisaoClassesTeste[i][0]) - 1):
@@ -89,7 +90,7 @@ def ClassificadorBayesiano(dados, atributoClasse):
             #Atualiza o maior discriminante, preenchendo a classe a qual ela pertence           
             if (discriminante > maiorDiscriminante):
                 maiorDiscriminante = discriminante
-                maiorClasse = conjTreino[x][atributoClasse]
+                maiorClasse = j
         #Apos obter a maior classe, atualiza no vetor de classificacao 
         classificacao[x] = maiorClasse
     #calcula a precisão de acertos
