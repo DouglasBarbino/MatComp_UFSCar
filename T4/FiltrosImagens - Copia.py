@@ -96,9 +96,9 @@ imagem2= io.imread('imagens_ruidosas\camera_sal_e_pimenta.png')
 #Imprime a imagem
 #io.imshow(imagem)
 
-imagem1Tratada = FiltroWiener(imagem1, 5, 0.01)
+#imagem1Tratada = FiltroWiener(imagem1, 5, 0.01)
 #Salvar imagem tratada
-io.imsave('imagens_ruidosas\camera_gaussian_tratada5.png', imagem1Tratada)
+#io.imsave('imagens_ruidosas\camera_gaussian_tratada5.png', imagem1Tratada)
 imagem2Tratada = FiltroMediana(imagem2,3)
 #Salvar imagem tratada
 io.imsave('imagens_ruidosas\camera_sal_e_pimenta_tratada.png', imagem2Tratada)
