@@ -3,6 +3,9 @@
 Implementacao do classificador Bayesiano sob hipotese Gaussiana e do
 classificador KNN, calculando sua taxa de erro
 @autores: Caroline Santos e Douglas Antonio Martins Barbino
+
+Funcoes divideDataset e dividePorClasse feitas com base na seginte implementacao:
+http://machinelearningmastery.com/naive-bayes-classifier-scratch-python/
 """
 import random
 import math
@@ -43,16 +46,20 @@ def dividePorClasse(dataset, atributoClasse):
 def calculoMatrizCovarianciaMedia(divisaoClassesTeste, nroClassesPossiveis):
     matrizCovariancia = []
     #O vetor de media eh inicializado com seu tamanho certo, ou seja,
-    #possui a altura do numero de classes possiveis e a largura do numero de atributos
-    media = [[0 for y in range(len(divisaoClassesTeste[0][0]))] for x in range(nroClassesPossiveis)] 
+    #possui a altura do numero de classes possiveis e a largura do numero de atributos (com excecao da classe)
+    media = [[0 for y in range(len(divisaoClassesTeste[0][0]) - 1)] for x in range(nroClassesPossiveis)] 
     for i in divisaoClassesTeste:
-        matrizCovariancia.append(np.cov(divisaoClassesTeste[i]))
+        #Necessario para que a matriz de covariancia saia com as dimensoes corretas
+        divClassesTransposto = np.transpose(divisaoClassesTeste[i])
+        #Deleta a linha onde estah armazenado a classe
+        divClassesTransposto = np.delete(divClassesTransposto, -1, 0)
+        matrizCovariancia.append(np.cov(divClassesTransposto))
         #Percorre cada atributo
-        for j in range((len(divisaoClassesTeste[i][0]))):
+        for j in range(len(divisaoClassesTeste[i][0]) - 1):
             mediaAtributo = 0
-            #Para cada instancia daquela classe, soma na media o valor daquele atributo
-            for k in range((len(divisaoClassesTeste[i]))):
-                mediaAtributo += (1/len(divisaoClassesTeste[i])) * divisaoClassesTeste[i][k][j]
+            #Para cada instancia soma na media o valor daquele atributo
+            for k in range(len(divClassesTransposto[j])):
+                mediaAtributo += (1/len(divClassesTransposto[j])) * divClassesTransposto[j][k]
             media[i][j] = mediaAtributo
     return matrizCovariancia, media
 
@@ -72,10 +79,13 @@ def ClassificadorBayesiano(dados, atributoClasse):
         for j in range(nroClassesPossiveis): 
             #Calculo do discriminante, sendo:
             #np.log sendo o ln
+            #np.linalg.det sendo o determinante da matriz
+            #np.dot a multiplicacao de matrizes
             #np.transpose a transposta da matriz
             #np.subtract a subtracao entre duas matrizes
+            #np.delete(conjTreino[x], -1, 0) para deletar a coluna da classe
             #np.linalg.inv a inversa de uma matriz
-            discriminante = np.log(1/nroClassesPossiveis) - (0.5 * np.log(matrizCovariancia[j])) - (0.5 * np.transpose(np.subtract(conjTreino[x], media[j])) * np.linalg.inv(matrizCovariancia[j]) * (np.subtract(x, media[j])))
+            discriminante = np.log(1/nroClassesPossiveis) - (0.5 * np.log(np.linalg.det(matrizCovariancia[j]))) - (0.5 * np.dot(np.dot(np.transpose(np.subtract(np.delete(conjTreino[x], -1, 0), media[j])), np.linalg.inv(matrizCovariancia[j])), np.subtract(np.delete(conjTreino[x], -1, 0), media[j])))
             #Atualiza o maior discriminante, preenchendo a classe a qual ela pertence           
             if (discriminante > maiorDiscriminante):
                 maiorDiscriminante = discriminante
@@ -133,6 +143,7 @@ def getPrecisao(conjTeste, classePredita):
     tamanhoConjTeste = len(conjTeste)
     #para cada dado no conjunto de teste
     for x in range(tamanhoConjTeste):
+        #print('classe predita=' + repr(classePredita[x]) + ', classe real=' + repr(conjTeste[x][-1]))
         #verifica se a classe do dado é realmente a classe predita
         if conjTeste[x][-1] == classePredita[x]:
             #se sim, incrementa o numero de precisoes corretas
@@ -157,7 +168,6 @@ def ClassificadorKNN(dados,k):
         #e adiciono na lista de predições a classe que foi escolhida para o dado para
         #depois comparar com a classe real que o dado pertence
         predicoes.append(resultado)
-        print('classe predita=' + repr(resultado) + ', classe real=' + repr(conjTeste[x][-1]))
     #calcula a precisão de acertos
     precisao = getPrecisao(conjTeste, predicoes)
     print('Precisão  KNN: ' + repr(precisao) + '% para k='+repr(k))
@@ -172,5 +182,3 @@ with open('dados_multivariados/4-diabetes/pima-indians-diabetes.data', 'rt') as 
 ClassificadorKNN(dataset,11)
 #chama o classificador Bayesiano, passando como parametro o atributo da classe
 ClassificadorBayesiano(dataset, -1)
-#base: http://machinelearningmastery.com/naive-bayes-classifier-scratch-python/
-#Depois monto os creditos direitinho
