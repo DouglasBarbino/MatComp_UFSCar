@@ -125,19 +125,7 @@ def getVizinhos(conjTreino, conjTeste, k):
 #depois de obter os k vizinhos mais próximos, temos que olhar as classes deles
 #e predizer a classe do dado
 def getResposta(vizinhos):
-    qtdClasse = {}
-    #para cada vizinho encontrado
-    for x in range(len(vizinhos)):
-        #vê qual é a classe do vizinho
-        resposta = vizinhos[x][-1]
-        #se a classe ja esta em classVotes, acrescenta um ponto para essa classe
-        #ou seja, ganhará a classe que tiver mais representantes como vizinho mais proximo
-        if resposta in qtdClasse:
-            qtdClasse[resposta] += 1
-        else:
-            qtdClasse[resposta] = 1
-    #ordena as classes por quantidade de votos recebidas.
-    sortedVotes = sorted(qtdClasse.items(), key=operator.itemgetter(1), reverse=True)
+    
     #retorna como classe a classe que tem a maioria dos vizinhos da classe
     return sortedVotes[0][0]
 
@@ -168,7 +156,20 @@ def ClassificadorKNN(dados,k):
         #obtenho os vizinhos mais próximos
         vizinhos = getVizinhos(conjTreino, conjTeste[x], k)
         #pego as respostas
-        resultado = getResposta(vizinhos)
+        qtdClasse = {}
+        #para cada vizinho encontrado
+        for x in range(len(vizinhos)):
+            #vê qual é a classe do vizinho
+            resposta = vizinhos[x][-1]
+            #se a classe ja esta em classVotes, acrescenta um ponto para essa classe
+            #ou seja, ganhará a classe que tiver mais representantes como vizinho mais proximo
+            if resposta in qtdClasse:
+                qtdClasse[resposta] += 1
+            else:
+                qtdClasse[resposta] = 1
+            #ordena as classes por quantidade de votos recebidas.
+            sortedVotes = sorted(qtdClasse.items(), key=operator.itemgetter(1), reverse=True)
+        resultado= sortedVotes[0][0]
         #e adiciono na lista de predições a classe que foi escolhida para o dado para
         #depois comparar com a classe real que o dado pertence
         predicoes.append(resultado)
