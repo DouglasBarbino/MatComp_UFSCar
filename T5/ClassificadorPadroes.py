@@ -180,6 +180,8 @@ with open('dados_multivariados/4-diabetes/pima-indians-diabetes.data', 'rt') as 
     reader = csv.reader(csvfile,delimiter=',')
     #converte as colunas para seus respectivos dados de acordo com o dataset
     dataset = [(int(col1),int(col2),int(col3),int(col4),int(col5),float(col6),float(col7),int(col8),int(col9)) for col1,col2,col3,col4,col5,col6,col7,col8,col9 in reader]
+#chama classificador Knn com k=5
+ClassificadorKNN(dataset,5)
 #chama classificador Knn com k=11
 ClassificadorKNN(dataset,11)
 #chama o classificador Bayesiano, passando como parametro o atributo da classe, que nesse dataset eh o ultimo
