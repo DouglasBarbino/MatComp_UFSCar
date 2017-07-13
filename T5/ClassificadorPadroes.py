@@ -122,12 +122,6 @@ def getVizinhos(conjTreino, conjTeste, k):
         vizinhos.append(distancias[x][0])
     return vizinhos
  
-#depois de obter os k vizinhos mais próximos, temos que olhar as classes deles
-#e predizer a classe do dado
-def getResposta(vizinhos):
-    
-    #retorna como classe a classe que tem a maioria dos vizinhos da classe
-    return sortedVotes[0][0]
 
 #recebe o conjunto de teste a predição das classes que ele retornou com KNN
 def getPrecisao(conjTeste, classePredita):
@@ -158,6 +152,8 @@ def ClassificadorKNN(dados,k):
         #pego as respostas
         qtdClasse = {}
         #para cada vizinho encontrado
+        #depois de obter os k vizinhos mais próximos, temos que olhar as classes deles
+        #e predizer a classe do dado
         for x in range(len(vizinhos)):
             #vê qual é a classe do vizinho
             resposta = vizinhos[x][-1]
@@ -169,6 +165,7 @@ def ClassificadorKNN(dados,k):
                 qtdClasse[resposta] = 1
             #ordena as classes por quantidade de votos recebidas.
             sortedVotes = sorted(qtdClasse.items(), key=operator.itemgetter(1), reverse=True)
+        #retorna como classe a classe que tem a maioria dos vizinhos da classe
         resultado= sortedVotes[0][0]
         #e adiciono na lista de predições a classe que foi escolhida para o dado para
         #depois comparar com a classe real que o dado pertence
